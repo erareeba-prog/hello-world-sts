@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Auth - Register & Login</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial; background: #f0f2f5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 30px; }
+        h1 { color: #333; margin-bottom: 25px; font-size: 26px; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; }
+        .tab { padding: 10px 30px; border: none; border-radius: 25px; cursor: pointer; font-size: 15px; font-weight: bold; }
+        .tab.active { background: #4CAF50; color: white; }
+        .tab.inactive { background: #ddd; color: #555; }
+
+        .card { background: white; padding: 35px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 420px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 11px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #4CAF50; }
+        button.submit { width: 100%; padding: 13px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        button.submit:hover { background: #43a047; }
+
+        .result { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; font-size: 13px; line-height: 2; }
+        .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .error { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+
+        .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
+        .DONOR    { background: #4CAF50; }
+        .NGO      { background: #2196F3; }
+        .PROVIDER { background: #FF9800; }
+        .ADMIN    { background: #f44336; }
+
+        .token-box { background: #f5f5f5; padding: 10px; border-radius: 6px; font-size: 11px; word-break: break-all; margin-top: 5px; color: #333; border: 1px solid #ddd; }
+        .nav-link { text-align: center; margin-top: 15px; }
+        .nav-link a { color: #555; text-decoration: none; font-size: 13px; }
+        .nav-link a:hover { text-decoration: underline; }
+        .section { display: none; }
+        .section.active { display: block; }
+    </style>
+</head>
+<body>
+
+    <h1>🔐 Auth Portal</h1>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('login')">🔑 Login</button>
+        <button class="tab inactive" onclick="switchTab('register')">📝 Register</button>
+    </div>
+
+    <div class="card">
+
+        <!-- LOGIN SECTION -->
+        <div id="loginSection" class="section active">
+            <label>User ID</label>
+            <input type="number" id="loginId" placeholder="Enter your User ID" />
+
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="Enter your Password"
+                   onkeypress="if(event.key==='Enter') login()" />
+
+            <button class="submit" onclick="login()">Login</button>
+            <div class="result" id="loginResult"></div>
+        </div>
+
+        <!-- REGISTER SECTION -->
+        <div id="registerSection" class="section">
+            <label>Full Name</label>
+            <input type="text" id="regName" placeholder="Enter your full name" />
+
+            <label>Email</label>
+            <input type="email" id="regEmail" placeholder="Enter your email" />
+
+            <label>Password</label>
+            <input type="password" id="regPassword" placeholder="Create a password" />
+
+            <label>Role</label>
+            <select id="regRole">
+                <option value="">-- Select Role --</option>
+                <option value="DONOR">DONOR</option>
+                <option value="NGO">NGO</option>
+                <option value="PROVIDER">PROVIDER</option>
+                <option value="ADMIN">ADMIN</option>
+            </select>
+
+            <button class="submit" onclick="register()">Register</button>
+            <div class="result" id="registerResult"></div>
+        </div>
+
+        <div class="nav-link">
+            <a href="/users.html">👥 View All Users</a>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.getElementById('loginSection').classList.toggle('active', tab === 'login');
+            document.getElementById('registerSection').classList.toggle('active', tab === 'register');
+            document.querySelectorAll('.tab')[0].className = 'tab ' + (tab === 'login' ? 'active' : 'inactive');
+            document.querySelectorAll('.tab')[1].className = 'tab ' + (tab === 'register' ? 'active' : 'inactive');
+        }
+
+        async function login() {
+            const id = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!id || !password) {
+                show('loginResult', 'error', '⚠️ Please enter both ID and Password!');
+                return;
+            }
+
+            show('loginResult', '', '⏳ Logging in...');
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: parseInt(id), password })
+                });
+
+                const text = await response.text();
+
+                if (response.ok) {
+                    const data = JSON.parse(text);
+                    show('loginResult', 'success', `
+                        ✅ <strong>Login Successful!</strong><br>
+                        🆔 <strong>ID:</strong> ${data.id}<br>
+                        👤 <strong>Name:</strong> ${data.name}<br>
+                        📧 <strong>Email:</strong> ${data.email}<br>
+                        🎭 <strong>Role:</strong> <span class="badge ${data.role}">${data.role}</span><br><br>
+                        🔑 <strong>Access Token:</strong>
+                        <div class="token-box">${data.accessToken}</div><br>
+                        🔄 <strong>Refresh Token:</strong>
+                        <div class="token-box">${data.refreshToken}</div>
+                    `);
+                } else {
+                    show('loginResult', 'error', '❌ ' + text);
+                }
+            } catch (err) {
+                show('loginResult', 'error', '❌ Cannot connect to server!');
+            }
+        }
+
+        async function register() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const role = document.getElementById('regRole').value;
+
+            if (!name || !email || !password || !role) {
+                show('registerResult', 'error', '⚠️ Please fill all fields!');
+                return;
+            }
+
+            show('registerResult', '', '⏳ Registering...');
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                const text = await response.text();
+
+                if (response.ok || response.status === 201) {
+                    const data = JSON.parse(text);
+                    show('registerResult', 'success', `
+                        ✅ <strong>Registration Successful!</strong><br>
+                        🆔 <strong>ID:</strong> ${data.id}<br>
+                        👤 <strong>Name:</strong> ${data.name}<br>
+                        📧 <strong>Email:</strong> ${data.email}<br>
+                        🎭 <strong>Role:</strong> <span class="badge ${data.role}">${data.role}</span><br><br>
+                        🔑 <strong>Access Token:</strong>
+                        <div class="token-box">${data.accessToken}</div><br>
+                        🔄 <strong>Refresh Token:</strong>
+                        <div class="token-box">${data.refreshToken}</div>
+                    `);
+                } else {
+                    show('registerResult', 'error', '❌ ' + text);
+                }
+            } catch (err) {
+                show('registerResult', 'error', '❌ Cannot connect to server!');
+            }
+        }
+
+        function show(id, type, message) {
+            const div = document.getElementById(id);
+            div.style.display = 'block';
+            div.className = 'result ' + type;
+            div.innerHTML = message;
+        }
+    </script>
+</body>
+</html>

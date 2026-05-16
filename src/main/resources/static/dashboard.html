@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>NGO Platform Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial; background: #f0f2f5; padding: 20px; }
+        h1 { text-align: center; color: #333; margin-bottom: 25px; }
+
+        .tabs { display: flex; flex-wrap: wrap; gap: 8px;
+                justify-content: center; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; border: none; border-radius: 20px;
+               cursor: pointer; font-size: 14px; font-weight: bold; }
+        .tab.active { background: #2196F3; color: white; }
+        .tab.inactive { background: #ddd; color: #555; }
+
+        .search-bar { display: flex; gap: 10px; margin-bottom: 15px;
+                      justify-content: center; flex-wrap: wrap; }
+        .search-bar input { padding: 10px; border: 1px solid #ddd;
+                            border-radius: 8px; font-size: 14px; width: 300px; }
+        .search-bar button { padding: 10px 20px; background: #4CAF50;
+                             color: white; border: none; border-radius: 8px;
+                             cursor: pointer; font-weight: bold; }
+
+        .count { text-align: center; color: #666;
+                 margin-bottom: 10px; font-size: 14px; }
+
+        table { width: 100%; border-collapse: collapse; background: white;
+                border-radius: 10px; overflow: hidden;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        th { background: #333; color: white; padding: 12px;
+             text-align: left; font-size: 13px; }
+        td { padding: 10px 12px; border-bottom: 1px solid #eee;
+             font-size: 13px; word-break: break-all; }
+        tr:hover { background: #f9f9f9; }
+        tr:last-child td { border-bottom: none; }
+
+        .badge { padding: 3px 10px; border-radius: 20px;
+                 font-size: 11px; font-weight: bold; color: white; }
+        .pending { background: #FF9800; }
+        .verified { background: #4CAF50; }
+        .rejected { background: #f44336; }
+        .under_review { background: #2196F3; }
+        .open { background: #4CAF50; }
+        .closed { background: #9E9E9E; }
+        .expired { background: #f44336; }
+        .partially_met { background: #FF9800; }
+        .fully_met { background: #2196F3; }
+        .confirmed { background: #4CAF50; }
+        .delivered { background: #2196F3; }
+        .cancelled { background: #f44336; }
+        .low { background: #8BC34A; }
+        .medium { background: #FF9800; }
+        .high { background: #FF5722; }
+        .critical { background: #f44336; }
+
+        .loading { text-align: center; padding: 40px;
+                   color: #666; font-size: 16px; }
+        .error-msg { text-align: center; padding: 20px;
+                     color: #f44336; font-size: 14px; }
+        .nav-links { display: flex; justify-content: center;
+                     gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .nav-links a { color: #2196F3; text-decoration: none;
+                       font-size: 13px; }
+        .nav-links a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<h1>🏛️ NGO Donation Platform</h1>
+
+<div class="tabs">
+    <button class="tab active" onclick="loadTab('ngos')">🏢 NGOs</button>
+    <button class="tab inactive" onclick="loadTab('needs')">📋 Needs</button>
+    <button class="tab inactive" onclick="loadTab('donations')">💰 Donations</button>
+    <button class="tab inactive" onclick="loadTab('fulfillments')">✅ Fulfillments</button>
+    <button class="tab inactive" onclick="loadTab('audit')">📜 Audit Logs</button>
+</div>
+
+<div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by name, status, city..." />
+    <button onclick="searchData()">🔍 Search</button>
+    <button onclick="loadTab(currentTab)" style="background:#607d8b;">🔄 Refresh</button>
+</div>
+
+<p class="count" id="count"></p>
+<div id="tableContainer"><div class="loading">⏳ Loading...</div></div>
+
+<div class="nav-links">
+    <a href="/auth.html">🔐 Login / Register</a>
+    <a href="/users.html">👥 Users</a>
+    <a href="/login.html">🔑 Search User</a>
+</div>
+
+<script>
+let currentTab = 'ngos';
+let allData = [];
+
+const columns = {
+    ngos: ['ngoId','name','city','state','verificationStatus',
+           'contactPhone','createdAt'],
+    needs: ['needId','title','category','urgency','status',
+            'qtyRequired','qtyFulfilled','deadline'],
+    donations: ['donationId','donorId','type','amountOrQty',
+                'currency','status','donatedAt'],
+    fulfillments: ['fulfillmentId','needId','qtyApplied',
+                   'proofUrl','fulfilledAt'],
+    audit: ['logId','actorId','tableName','action','performedAt']
+};
+
+const badgeFields = ['verificationStatus','status','urgency'];
+
+async function loadTab(tab) {
+    currentTab = tab;
+    document.getElementById('searchInput').value = '';
+
+    // Update tab styles
+    document.querySelectorAll('.tab').forEach((t, i) => {
+        const tabs = ['ngos','needs','donations','fulfillments','audit'];
+        t.className = 'tab ' + (tabs[i] === tab ? 'active' : 'inactive');
+    });
+
+    document.getElementById('tableContainer').innerHTML =
+        '<div class="loading">⏳ Loading...</div>';
+
+    try {
+        const url = tab === 'audit'
+            ? '/api/audit' : `/api/${tab}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed to fetch');
+        allData = await res.json();
+        renderTable(allData);
+    } catch (err) {
+        document.getElementById('tableContainer').innerHTML =
+            `<div class="error-msg">❌ Error loading data. 
+             Make sure app is running!</div>`;
+        document.getElementById('count').textContent = '';
+    }
+}
+
+function renderTable(data) {
+    const cols = columns[currentTab];
+    document.getElementById('count').textContent =
+        `Showing ${data.length} record(s)`;
+
+    if (data.length === 0) {
+        document.getElementById('tableContainer').innerHTML =
+            '<div class="loading">📭 No records found</div>';
+        return;
+    }
+
+    let html = '<table><thead><tr>';
+    html += '<th>#</th>';
+    cols.forEach(c => {
+        html += `<th>${formatHeader(c)}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    data.forEach((item, index) => {
+        html += '<tr>';
+        html += `<td>${index + 1}</td>`;
+        cols.forEach(col => {
+            const val = item[col];
+            if (badgeFields.includes(col) && val) {
+                html += `<td><span class="badge ${val}">${val}</span></td>`;
+            } else if (col.includes('At') && val) {
+                html += `<td>${new Date(val)
+                    .toLocaleDateString('en-IN')}</td>`;
+            } else {
+                html += `<td>${val ?? '-'}</td>`;
+            }
+        });
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('tableContainer').innerHTML = html;
+}
+
+function searchData() {
+    const query = document.getElementById('searchInput')
+        .value.toLowerCase();
+    if (!query) { renderTable(allData); return; }
+
+    const filtered = allData.filter(item =>
+        Object.values(item).some(v =>
+            String(v).toLowerCase().includes(query)
+        )
+    );
+    renderTable(filtered);
+}
+
+function formatHeader(col) {
+    return col
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, s => s.toUpperCase());
+}
+
+// Load NGOs on start
+loadTab('ngos');
+</script>
+</body>
+</html>

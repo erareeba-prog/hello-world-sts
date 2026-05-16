@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Users List</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial; background: #f0f2f5; padding: 30px; }
+        h2 { text-align: center; margin-bottom: 20px; color: #333; }
+
+        .filter-bar { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-bar button { padding: 8px 20px; border: none; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-all      { background: #607d8b; color: white; }
+        .btn-donor    { background: #4CAF50; color: white; }
+        .btn-ngo      { background: #2196F3; color: white; }
+        .btn-provider { background: #FF9800; color: white; }
+        .btn-admin    { background: #f44336; color: white; }
+        button:hover  { opacity: 0.85; }
+
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        th { background: #333; color: white; padding: 14px; text-align: left; }
+        td { padding: 12px 14px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f9f9f9; }
+        tr:last-child td { border-bottom: none; }
+
+        .badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
+        .DONOR    { background: #4CAF50; }
+        .NGO      { background: #2196F3; }
+        .PROVIDER { background: #FF9800; }
+        .ADMIN    { background: #f44336; }
+
+        #count { text-align: center; margin-bottom: 10px; color: #666; }
+    </style>
+</head>
+<body>
+
+    <h2>👥 Users List</h2>
+
+    <div class="filter-bar">
+        <button class="btn-all"      onclick="loadUsers('all')">All Users</button>
+        <button class="btn-donor"    onclick="loadUsers('DONOR')">DONOR</button>
+        <button class="btn-ngo"      onclick="loadUsers('NGO')">NGO</button>
+        <button class="btn-provider" onclick="loadUsers('PROVIDER')">PROVIDER</button>
+        <button class="btn-admin"    onclick="loadUsers('ADMIN')">ADMIN</button>
+    </div>
+
+    <p id="count"></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <script>
+        async function loadUsers(filter) {
+            const url = filter === 'all'
+                ? '/users'
+                : `/users/role/${filter}`;
+
+            const response = await fetch(url);
+            const users = await response.json();
+
+            document.getElementById('count').textContent =
+                `Showing ${users.length} user(s)`;
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            users.forEach((user, index) => {
+                const date = user.created_at
+                    ? new Date(user.created_at).toLocaleDateString('en-IN')
+                    : 'N/A';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="badge ${user.role}">${user.role ?? 'N/A'}</span></td>
+                        <td>${date}</td>
+                    </tr>`;
+            });
+        }
+
+        // Load all users on page open
+        loadUsers('all');
+    </script>
+	<div style="text-align:center; margin-top:20px;">
+	    <a href="/login.html" style="color:#333; text-decoration:none; font-weight:bold;">
+	        🔐 Search User by ID & Password
+	    </a>
+	</div>
+</body>
+</html>
