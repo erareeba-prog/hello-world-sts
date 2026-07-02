@@ -1,204 +1,659 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NGO Platform Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial; background: #f0f2f5; padding: 20px; }
-        h1 { text-align: center; color: #333; margin-bottom: 25px; }
-
-        .tabs { display: flex; flex-wrap: wrap; gap: 8px;
-                justify-content: center; margin-bottom: 20px; }
-        .tab { padding: 10px 20px; border: none; border-radius: 20px;
-               cursor: pointer; font-size: 14px; font-weight: bold; }
-        .tab.active { background: #2196F3; color: white; }
-        .tab.inactive { background: #ddd; color: #555; }
-
-        .search-bar { display: flex; gap: 10px; margin-bottom: 15px;
-                      justify-content: center; flex-wrap: wrap; }
-        .search-bar input { padding: 10px; border: 1px solid #ddd;
-                            border-radius: 8px; font-size: 14px; width: 300px; }
-        .search-bar button { padding: 10px 20px; background: #4CAF50;
-                             color: white; border: none; border-radius: 8px;
-                             cursor: pointer; font-weight: bold; }
-
-        .count { text-align: center; color: #666;
-                 margin-bottom: 10px; font-size: 14px; }
-
-        table { width: 100%; border-collapse: collapse; background: white;
-                border-radius: 10px; overflow: hidden;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        th { background: #333; color: white; padding: 12px;
-             text-align: left; font-size: 13px; }
-        td { padding: 10px 12px; border-bottom: 1px solid #eee;
-             font-size: 13px; word-break: break-all; }
-        tr:hover { background: #f9f9f9; }
-        tr:last-child td { border-bottom: none; }
-
-        .badge { padding: 3px 10px; border-radius: 20px;
-                 font-size: 11px; font-weight: bold; color: white; }
-        .pending { background: #FF9800; }
-        .verified { background: #4CAF50; }
-        .rejected { background: #f44336; }
-        .under_review { background: #2196F3; }
-        .open { background: #4CAF50; }
-        .closed { background: #9E9E9E; }
-        .expired { background: #f44336; }
-        .partially_met { background: #FF9800; }
-        .fully_met { background: #2196F3; }
-        .confirmed { background: #4CAF50; }
-        .delivered { background: #2196F3; }
-        .cancelled { background: #f44336; }
-        .low { background: #8BC34A; }
-        .medium { background: #FF9800; }
-        .high { background: #FF5722; }
-        .critical { background: #f44336; }
-
-        .loading { text-align: center; padding: 40px;
-                   color: #666; font-size: 16px; }
-        .error-msg { text-align: center; padding: 20px;
-                     color: #f44336; font-size: 14px; }
-        .nav-links { display: flex; justify-content: center;
-                     gap: 15px; margin-top: 20px; flex-wrap: wrap; }
-        .nav-links a { color: #2196F3; text-decoration: none;
-                       font-size: 13px; }
-        .nav-links a:hover { text-decoration: underline; }
+        body { background: #f0f2f5; }
+        .navbar { background: linear-gradient(135deg, #1a237e, #1565c0) !important; }
+        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .nav-tabs .nav-link { font-weight: 600; color: #555; border-radius: 8px 8px 0 0; }
+        .nav-tabs .nav-link.active { color: #1565c0; border-bottom-color: white; }
+        .table th { background: #1a237e; color: white; font-weight: 600; }
+        .table td { vertical-align: middle; }
+        .badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; }
+        .search-box { border-radius: 25px; border: 2px solid #dee2e6; padding: 8px 16px; }
+        .search-box:focus { border-color: #1565c0; box-shadow: none; }
+        .need-card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); transition: transform 0.2s; }
+        .need-card:hover { transform: translateY(-3px); }
+        .progress { height: 8px; border-radius: 4px; }
+        .ngo-card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); transition: transform 0.2s; }
+        .ngo-card:hover { transform: translateY(-3px); }
+        .ngo-avatar { width: 50px; height: 50px; border-radius: 12px; background: linear-gradient(135deg, #1565c0, #0d47a1); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; font-weight: bold; }
+        .notif-dropdown { width: 360px; max-height: 460px; overflow-y: auto; }
+        .notif-item { cursor: pointer; white-space: normal !important; transition: background 0.2s; }
+        .notif-item:hover { background: #f0f4ff !important; }
+        .notif-item.unread { background: #f0f7ff; border-left: 3px solid #1565c0; }
+        .notif-item.read { border-left: 3px solid transparent; }
+        .toast-notif { position: fixed; bottom: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
-<h1>🏛️ NGO Donation Platform</h1>
+<nav class="navbar navbar-dark px-4 py-3 mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold fs-5">
+            <i class="bi bi-building-fill-heart me-2"></i>NGO Donation Platform
+        </span>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-white-50 small d-none d-md-inline">
+                <i class="bi bi-person-circle me-1"></i>
+                <span id="topBarName">Guest</span>
+            </span>
+            <div class="dropdown">
+                <button class="btn btn-outline-light btn-sm position-relative"
+                    id="notifBell"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    onclick="loadNotifications()">
+                    <i class="bi bi-bell-fill"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        id="unreadBadge" style="display:none;font-size:9px;min-width:18px;">0</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow notif-dropdown p-0">
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom bg-light">
+                        <strong class="small">
+                            <i class="bi bi-bell me-1 text-primary"></i>Notifications
+                            <span class="badge bg-danger ms-1" id="notifHeaderCount" style="display:none;font-size:9px;">0</span>
+                        </strong>
+                        <button class="btn btn-link btn-sm p-0 text-decoration-none text-primary"
+                            onclick="markAllRead();event.stopPropagation();">
+                            <i class="bi bi-check2-all me-1"></i>Mark all read
+                        </button>
+                    </div>
+                    <div id="notifList">
+                        <div class="text-center py-4 text-muted small">
+                            <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>No notifications yet
+                        </div>
+                    </div>
+                    <div class="border-top text-center py-2 bg-light">
+                        <small class="text-muted">Showing last 10 notifications</small>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-outline-light btn-sm" onclick="refreshToken()">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                <span class="d-none d-md-inline">Refresh</span>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="logout()">
+                <i class="bi bi-box-arrow-right me-1"></i>
+                <span class="d-none d-md-inline">Logout</span>
+            </button>
+        </div>
+    </div>
+</nav>
 
-<div class="tabs">
-    <button class="tab active" onclick="loadTab('ngos')">🏢 NGOs</button>
-    <button class="tab inactive" onclick="loadTab('needs')">📋 Needs</button>
-    <button class="tab inactive" onclick="loadTab('donations')">💰 Donations</button>
-    <button class="tab inactive" onclick="loadTab('fulfillments')">✅ Fulfillments</button>
-    <button class="tab inactive" onclick="loadTab('audit')">📜 Audit Logs</button>
+<div class="container-fluid px-4">
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card stat-card p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#e3f2fd;">
+                        <i class="bi bi-people-fill text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Users</div>
+                        <div class="fw-bold fs-4" id="statUsers">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#e8f5e9;">
+                        <i class="bi bi-building-fill text-success"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Active NGOs</div>
+                        <div class="fw-bold fs-4" id="statNgos">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#fff3e0;">
+                        <i class="bi bi-currency-rupee text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Total Donations</div>
+                        <div class="fw-bold fs-4" id="statDonations">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card stat-card p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon" style="background:#fce4ec;">
+                        <i class="bi bi-clock-history text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted small">Pending Approvals</div>
+                        <div class="fw-bold fs-4" id="statPending">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12 col-md-6 mx-auto">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control search-box border-start-0"
+                    id="searchInput" placeholder="Search by name, status, city..."
+                    oninput="searchData()" />
+                <button class="btn btn-outline-secondary" onclick="loadTab(currentTab)">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-0" id="mainTabs">
+        <li class="nav-item">
+            <button class="nav-link active" onclick="loadTab('ngos')">
+                <i class="bi bi-building me-1"></i>NGOs
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" onclick="loadTab('needs')">
+                <i class="bi bi-card-list me-1"></i>Needs
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" onclick="loadTab('donations')">
+                <i class="bi bi-cash-coin me-1"></i>Donations
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" onclick="loadTab('fulfillments')">
+                <i class="bi bi-check2-circle me-1"></i>Fulfillments
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" onclick="loadTab('audit')">
+                <i class="bi bi-journal-text me-1"></i>Audit Logs
+            </button>
+        </li>
+    </ul>
+
+    <div class="card border-top-0 rounded-0 rounded-bottom shadow-sm">
+        <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <small class="text-muted" id="count"></small>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary active" onclick="setView('table')" id="btnTable">
+                        <i class="bi bi-table"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="setView('cards')" id="btnCards">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="tableContainer">
+                <div class="text-center py-5 text-muted">
+                    <div class="spinner-border text-primary mb-3"></div>
+                    <div>Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4 mb-3">
+        <a href="/auth.html" class="btn btn-outline-primary btn-sm me-2">
+            <i class="bi bi-shield-lock me-1"></i>Login / Register
+        </a>
+        <a href="/users.html" class="btn btn-outline-secondary btn-sm me-2">
+            <i class="bi bi-people me-1"></i>Users
+        </a>
+        <a href="/ngos.html" class="btn btn-outline-info btn-sm me-2">
+            <i class="bi bi-building me-1"></i>NGO Listing
+        </a>
+        <a href="/needs.html" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-card-list me-1"></i>Need Cards
+        </a>
+    </div>
+
 </div>
 
-<div class="search-bar">
-    <input type="text" id="searchInput" placeholder="Search by name, status, city..." />
-    <button onclick="searchData()">🔍 Search</button>
-    <button onclick="loadTab(currentTab)" style="background:#607d8b;">🔄 Refresh</button>
-</div>
-
-<p class="count" id="count"></p>
-<div id="tableContainer"><div class="loading">⏳ Loading...</div></div>
-
-<div class="nav-links">
-    <a href="/auth.html">🔐 Login / Register</a>
-    <a href="/users.html">👥 Users</a>
-    <a href="/login.html">🔑 Search User</a>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+
+// ─── State ───────────────────────────────────────────────────
 let currentTab = 'ngos';
 let allData = [];
+let currentView = 'table';
+let stompClient = null;
 
 const columns = {
-    ngos: ['ngoId','name','city','state','verificationStatus',
-           'contactPhone','createdAt'],
-    needs: ['needId','title','category','urgency','status',
-            'qtyRequired','qtyFulfilled','deadline'],
-    donations: ['donationId','donorId','type','amountOrQty',
-                'currency','status','donatedAt'],
-    fulfillments: ['fulfillmentId','needId','qtyApplied',
-                   'proofUrl','fulfilledAt'],
+    ngos: ['ngoId','name','city','state','verificationStatus','contactPhone'],
+    needs: ['needId','title','category','urgency','status','qtyRequired','qtyFulfilled'],
+    donations: ['donationId','donorId','type','amountOrQty','currency','status','donatedAt'],
+    fulfillments: ['fulfillmentId','needId','qtyApplied','status','fulfilledAt'],
     audit: ['logId','actorId','tableName','action','performedAt']
 };
 
-const badgeFields = ['verificationStatus','status','urgency'];
+const badgeColors = {
+    pending: 'warning', active: 'success', verified: 'success',
+    rejected: 'danger', open: 'success', closed: 'secondary',
+    confirmed: 'primary', delivered: 'info', cancelled: 'danger',
+    low: 'success', medium: 'warning', high: 'danger',
+    critical: 'danger', approved: 'success'
+};
+
+const notifIcons = {
+    DONATION_CREATED:      { icon: '💰', color: 'warning' },
+    NGO_APPROVED:          { icon: '🎉', color: 'success' },
+    NGO_REJECTED:          { icon: '❌', color: 'danger'  },
+    FULFILLMENT_CONFIRMED: { icon: '✅', color: 'success' },
+    OTP_SENT:              { icon: '📱', color: 'info'    },
+    WELCOME:               { icon: '👋', color: 'primary' }
+};
+
+// ─── Token Helpers ────────────────────────────────────────────
+function getAccessToken() { return localStorage.getItem('accessToken'); }
+function getRefreshToken() { return localStorage.getItem('refreshToken'); }
+function getUserId()      { return localStorage.getItem('userId'); }
+function clearTokens() {
+    ['accessToken','refreshToken','userName','userId']
+        .forEach(k => localStorage.removeItem(k));
+}
+
+// ─── Init ─────────────────────────────────────────────────────
+window.onload = async function() {
+    const name = localStorage.getItem('userName');
+    if (name) document.getElementById('topBarName').textContent = name;
+    await loadStats();
+    await loadTab('ngos');
+    connectWebSocket();
+    loadUnreadCount();
+};
+
+// ─── Auth Fetch ───────────────────────────────────────────────
+async function authFetch(url) {
+    const token = getAccessToken();
+    const res = await fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token && { 'Authorization': 'Bearer ' + token })
+        }
+    });
+    if (res.status === 401) {
+        const ok = await doRefresh(true);
+        if (ok) return fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getAccessToken()
+            }
+        });
+        window.location.href = '/auth.html';
+    }
+    return res;
+}
+
+// ─── Stats ────────────────────────────────────────────────────
+async function loadStats() {
+    try {
+        const res = await authFetch('/api/dashboard/admin');
+        if (res.ok) {
+            const d = await res.json();
+            document.getElementById('statUsers').textContent    = d.totalUsers ?? 0;
+            document.getElementById('statNgos').textContent     = d.activeNgos ?? 0;
+            document.getElementById('statDonations').textContent = '₹' + (d.totalDonationAmount ?? 0);
+            document.getElementById('statPending').textContent  = d.pendingApprovalsCount ?? 0;
+        }
+    } catch(e) {
+        console.error('Stats error:', e);
+    }
+}
+
+// ─── Tab Loading ──────────────────────────────────────────────
+function setView(v) {
+    currentView = v;
+    document.getElementById('btnTable').classList.toggle('active', v === 'table');
+    document.getElementById('btnCards').classList.toggle('active', v === 'cards');
+    renderContent(allData);
+}
 
 async function loadTab(tab) {
     currentTab = tab;
     document.getElementById('searchInput').value = '';
-
-    // Update tab styles
-    document.querySelectorAll('.tab').forEach((t, i) => {
+    document.querySelectorAll('#mainTabs .nav-link').forEach((t, i) => {
         const tabs = ['ngos','needs','donations','fulfillments','audit'];
-        t.className = 'tab ' + (tabs[i] === tab ? 'active' : 'inactive');
+        t.classList.toggle('active', tabs[i] === tab);
     });
-
-    document.getElementById('tableContainer').innerHTML =
-        '<div class="loading">⏳ Loading...</div>';
-
+    document.getElementById('tableContainer').innerHTML = `
+        <div class="text-center py-5 text-muted">
+            <div class="spinner-border text-primary mb-3"></div>
+            <div>Loading ${tab}...</div>
+        </div>`;
     try {
-        const url = tab === 'audit'
-            ? '/api/audit' : `/api/${tab}`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Failed to fetch');
+        const url = tab === 'audit' ? '/api/audit' : '/api/' + tab;
+        const res = await authFetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         allData = await res.json();
-        renderTable(allData);
-    } catch (err) {
-        document.getElementById('tableContainer').innerHTML =
-            `<div class="error-msg">❌ Error loading data. 
-             Make sure app is running!</div>`;
+        renderContent(allData);
+    } catch(e) {
+        console.error('loadTab error:', e);
+        document.getElementById('tableContainer').innerHTML = `
+            <div class="alert alert-danger text-center m-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error loading ${tab}. Make sure app is running!
+                <br><small class="text-muted">${e.message}</small>
+            </div>`;
         document.getElementById('count').textContent = '';
+    }
+}
+
+// ─── Render ───────────────────────────────────────────────────
+function renderContent(data) {
+    document.getElementById('count').textContent = 'Showing ' + data.length + ' record(s)';
+    if (data.length === 0) {
+        document.getElementById('tableContainer').innerHTML = `
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <div class="mt-2">No records found</div>
+            </div>`;
+        return;
+    }
+    if (currentView === 'cards' && (currentTab === 'ngos' || currentTab === 'needs')) {
+        renderCards(data);
+    } else {
+        renderTable(data);
     }
 }
 
 function renderTable(data) {
     const cols = columns[currentTab];
-    document.getElementById('count').textContent =
-        `Showing ${data.length} record(s)`;
-
-    if (data.length === 0) {
-        document.getElementById('tableContainer').innerHTML =
-            '<div class="loading">📭 No records found</div>';
-        return;
-    }
-
-    let html = '<table><thead><tr>';
-    html += '<th>#</th>';
-    cols.forEach(c => {
-        html += `<th>${formatHeader(c)}</th>`;
-    });
+    let html = '<div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>#</th>';
+    cols.forEach(c => html += '<th>' + formatHeader(c) + '</th>');
     html += '</tr></thead><tbody>';
-
-    data.forEach((item, index) => {
-        html += '<tr>';
-        html += `<td>${index + 1}</td>`;
+    data.forEach((item, i) => {
+        html += '<tr><td><span class="badge bg-secondary">' + (i+1) + '</span></td>';
         cols.forEach(col => {
             const val = item[col];
-            if (badgeFields.includes(col) && val) {
-                html += `<td><span class="badge ${val}">${val}</span></td>`;
+            if (['verificationStatus','status','urgency'].includes(col) && val) {
+                const color = badgeColors[val.toLowerCase()] || 'secondary';
+                html += '<td><span class="badge bg-' + color + '">' + val + '</span></td>';
             } else if (col.includes('At') && val) {
-                html += `<td>${new Date(val)
-                    .toLocaleDateString('en-IN')}</td>`;
+                html += '<td><small>' + new Date(val).toLocaleDateString('en-IN') + '</small></td>';
+            } else if (col.includes('Id') && val && String(val).length > 12) {
+                html += '<td><small class="text-muted font-monospace">' + String(val).substring(0,8) + '...</small></td>';
             } else {
-                html += `<td>${val ?? '-'}</td>`;
+                html += '<td>' + (val != null ? val : '<span class="text-muted">—</span>') + '</td>';
             }
         });
         html += '</tr>';
     });
+    html += '</tbody></table></div>';
+    document.getElementById('tableContainer').innerHTML = html;
+}
 
-    html += '</tbody></table>';
+function renderCards(data) {
+    let html = '<div class="row g-3">';
+    if (currentTab === 'ngos') {
+        data.forEach(item => {
+            const color = badgeColors[item.verificationStatus?.toLowerCase()] || 'secondary';
+            html += '<div class="col-12 col-md-6 col-lg-4"><div class="card ngo-card h-100 p-3">';
+            html += '<div class="d-flex align-items-center gap-3 mb-3">';
+            html += '<div class="ngo-avatar">' + (item.name||'N')[0] + '</div>';
+            html += '<div><div class="fw-bold">' + (item.name||'—') + '</div>';
+            html += '<small class="text-muted"><i class="bi bi-geo-alt me-1"></i>' + (item.city||'—') + ', ' + (item.state||'—') + '</small></div></div>';
+            html += '<div class="d-flex justify-content-between align-items-center">';
+            html += '<span class="badge bg-' + color + '">' + (item.verificationStatus||'—') + '</span>';
+            html += '<small class="text-muted"><i class="bi bi-telephone me-1"></i>' + (item.contactPhone||'—') + '</small></div>';
+            html += '</div></div>';
+        });
+    } else if (currentTab === 'needs') {
+        data.forEach(item => {
+            const sc = badgeColors[item.status?.toLowerCase()] || 'secondary';
+            const uc = badgeColors[item.urgency?.toLowerCase()] || 'secondary';
+            const pct = item.qtyRequired > 0 ? Math.min(100, Math.round((item.qtyFulfilled / item.qtyRequired) * 100)) : 0;
+            html += '<div class="col-12 col-md-6 col-lg-4"><div class="card need-card h-100 p-3">';
+            html += '<div class="d-flex justify-content-between mb-2">';
+            html += '<span class="badge bg-' + sc + '">' + (item.status||'—') + '</span>';
+            html += '<span class="badge bg-' + uc + '">' + (item.urgency||'—') + '</span></div>';
+            html += '<h6 class="fw-bold mb-1">' + (item.title||'—') + '</h6>';
+            html += '<small class="text-muted mb-3 d-block"><i class="bi bi-tag me-1"></i>' + (item.category||'—') + '</small>';
+            html += '<div class="mt-auto"><div class="d-flex justify-content-between mb-1">';
+            html += '<small class="text-muted">Progress</small><small class="fw-bold">' + pct + '%</small></div>';
+            html += '<div class="progress"><div class="progress-bar bg-success" style="width:' + pct + '%"></div></div>';
+            html += '<div class="d-flex justify-content-between mt-2">';
+            html += '<small class="text-muted">Required: <strong>' + item.qtyRequired + '</strong></small>';
+            html += '<small class="text-muted">Fulfilled: <strong>' + (item.qtyFulfilled||0) + '</strong></small>';
+            html += '</div></div></div></div>';
+        });
+    }
+    html += '</div>';
     document.getElementById('tableContainer').innerHTML = html;
 }
 
 function searchData() {
-    const query = document.getElementById('searchInput')
-        .value.toLowerCase();
-    if (!query) { renderTable(allData); return; }
-
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    if (!q) { renderContent(allData); return; }
     const filtered = allData.filter(item =>
-        Object.values(item).some(v =>
-            String(v).toLowerCase().includes(query)
-        )
-    );
-    renderTable(filtered);
+        Object.values(item).some(v => String(v).toLowerCase().includes(q)));
+    renderContent(filtered);
+}
+
+// ─── WebSocket ────────────────────────────────────────────────
+function connectWebSocket() {
+    const userId = getUserId();
+    if (!userId) return;
+    try {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.debug = null;
+        stompClient.connect({}, function() {
+            console.log('✅ WebSocket connected');
+            stompClient.subscribe('/topic/notifications/' + userId, function(msg) {
+                const data = JSON.parse(msg.body);
+                if (data.unreadCount !== undefined) updateUnreadBadge(data.unreadCount);
+                if (data.type && data.type !== 'MARK_ALL_READ') {
+                    showToast(data.title, data.message, data.type);
+                }
+            });
+        }, function(err) {
+            console.log('WebSocket error (non-critical):', err);
+        });
+    } catch(e) {
+        console.log('WebSocket unavailable:', e);
+    }
+}
+
+// ─── Notifications ────────────────────────────────────────────
+async function loadUnreadCount() {
+    const userId = getUserId();
+    if (!userId) return;
+    try {
+        const res = await fetch('/api/notifications/unread-count?userId=' + userId);
+        if (res.ok) {
+            const data = await res.json();
+            updateUnreadBadge(data.unreadCount);
+        }
+    } catch(e) {}
+}
+
+function updateUnreadBadge(count) {
+    const badge = document.getElementById('unreadBadge');
+    const headerCount = document.getElementById('notifHeaderCount');
+    if (count > 0) {
+        const display = count > 99 ? '99+' : count;
+        badge.style.display = 'inline';
+        badge.textContent = display;
+        headerCount.style.display = 'inline';
+        headerCount.textContent = display;
+    } else {
+        badge.style.display = 'none';
+        headerCount.style.display = 'none';
+    }
+}
+
+async function loadNotifications() {
+    const userId = getUserId();
+    if (!userId) {
+        document.getElementById('notifList').innerHTML = `
+            <div class="text-center py-4 text-muted small">
+                <i class="bi bi-person-x fs-4 d-block mb-2"></i>Please login to see notifications
+            </div>`;
+        return;
+    }
+    document.getElementById('notifList').innerHTML = `
+        <div class="text-center py-3">
+            <div class="spinner-border spinner-border-sm text-primary"></div>
+        </div>`;
+    try {
+        const res = await fetch('/api/notifications/last10?userId=' + userId);
+        if (!res.ok) throw new Error();
+        const notifs = await res.json();
+        renderNotifications(notifs);
+    } catch(e) {
+        document.getElementById('notifList').innerHTML = `
+            <div class="text-center py-4 text-muted small">
+                <i class="bi bi-exclamation-triangle text-warning fs-4 d-block mb-2"></i>
+                Could not load notifications
+            </div>`;
+    }
+}
+
+function renderNotifications(notifs) {
+    const list = document.getElementById('notifList');
+    if (!notifs || notifs.length === 0) {
+        list.innerHTML = `
+            <div class="text-center py-4 text-muted small">
+                <i class="bi bi-bell-slash fs-4 d-block mb-2"></i>No notifications yet
+            </div>`;
+        return;
+    }
+    list.innerHTML = notifs.map(n => {
+        const info = notifIcons[n.type] || { icon: '🔔', color: 'secondary' };
+        const timeAgo = formatTimeAgo(n.createdAt);
+        return '<div class="notif-item dropdown-item py-2 px-3 border-bottom ' + (n.isRead ? 'read' : 'unread') + '" onclick="markRead(\'' + n.notificationId + '\')">' +
+            '<div class="d-flex gap-2 align-items-start">' +
+            '<div class="flex-shrink-0 mt-1" style="font-size:20px;">' + info.icon + '</div>' +
+            '<div class="flex-grow-1">' +
+            '<div class="fw-semibold small ' + (n.isRead ? 'text-dark' : 'text-primary') + '">' + n.title + '</div>' +
+            '<div class="text-muted" style="font-size:11px;">' + n.message + '</div>' +
+            '<div class="text-muted mt-1" style="font-size:10px;"><i class="bi bi-clock me-1"></i>' + timeAgo + '</div>' +
+            '</div>' +
+            (!n.isRead ? '<span class="badge bg-primary ms-1" style="font-size:8px;">NEW</span>' : '') +
+            '</div></div>';
+    }).join('');
+}
+
+async function markRead(notifId) {
+    const userId = getUserId();
+    if (!userId) return;
+    try {
+        await fetch('/api/notifications/' + notifId + '/read?userId=' + userId, { method: 'PUT' });
+        await loadNotifications();
+        await loadUnreadCount();
+    } catch(e) {}
+}
+
+async function markAllRead() {
+    const userId = getUserId();
+    if (!userId) return;
+    try {
+        await fetch('/api/notifications/mark-all-read?userId=' + userId, { method: 'PUT' });
+        await loadNotifications();
+        updateUnreadBadge(0);
+    } catch(e) {}
+}
+
+function showToast(title, message, type) {
+    const info = notifIcons[type] || { icon: '🔔', color: 'primary' };
+    const id = 'toast_' + Date.now();
+    const html = '<div id="' + id + '" class="toast show toast-notif">' +
+        '<div class="toast-header bg-' + info.color + ' text-white">' +
+        '<span class="me-2">' + info.icon + '</span>' +
+        '<strong class="me-auto">' + title + '</strong>' +
+        '<button type="button" class="btn-close btn-close-white" onclick="document.getElementById(\'' + id + '\').remove()"></button>' +
+        '</div>' +
+        '<div class="toast-body bg-white"><small>' + message + '</small></div>' +
+        '</div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+    setTimeout(function() {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }, 5000);
+}
+
+function formatTimeAgo(dateStr) {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    const hrs  = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (mins < 1)  return 'Just now';
+    if (mins < 60) return mins + 'm ago';
+    if (hrs < 24)  return hrs + 'h ago';
+    return days + 'd ago';
+}
+
+// ─── Token Management ─────────────────────────────────────────
+async function doRefresh(silent) {
+    const token = getRefreshToken();
+    if (!token) return false;
+    try {
+        const res = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken: token })
+        });
+        if (res.ok) {
+            const d = await res.json();
+            localStorage.setItem('accessToken', d.accessToken);
+            localStorage.setItem('refreshToken', d.refreshToken);
+            if (!silent) alert('✅ Token refreshed!');
+            return true;
+        }
+    } catch(e) {}
+    clearTokens();
+    return false;
+}
+
+async function refreshToken() { await doRefresh(false); }
+
+async function logout() {
+    const token = getAccessToken();
+    if (token) {
+        try {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+        } catch(e) {}
+    }
+    if (stompClient) {
+        try { stompClient.disconnect(); } catch(e) {}
+    }
+    clearTokens();
+    window.location.href = '/auth.html';
 }
 
 function formatHeader(col) {
-    return col
-        .replace(/([A-Z])/g, ' $1')
-        .replace(/^./, s => s.toUpperCase());
+    return col.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase());
 }
 
-// Load NGOs on start
-loadTab('ngos');
 </script>
 </body>
 </html>

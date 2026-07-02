@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Listing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; }
+        .navbar { background: linear-gradient(135deg, #1a237e, #1565c0) !important; }
+        .ngo-card { border: none; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: all 0.3s; }
+        .ngo-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .ngo-avatar { width: 64px; height: 64px; border-radius: 16px; background: linear-gradient(135deg, #1565c0, #0d47a1); display: flex; align-items: center; justify-content: center; color: white; font-size: 26px; font-weight: bold; }
+        .filter-btn { border-radius: 20px; font-weight: 600; }
+        .search-box { border-radius: 25px; }
+        .stat-pill { background: #f8f9fa; border-radius: 8px; padding: 4px 10px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark px-4 py-3 mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/dashboard.html">
+            <i class="bi bi-arrow-left me-2"></i>NGO Platform
+        </a>
+        <span class="text-white-50 small">
+            <i class="bi bi-building me-1"></i>NGO Directory
+        </span>
+    </div>
+</nav>
+
+<div class="container-fluid px-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-2">
+            <i class="bi bi-building-fill me-2 text-primary"></i>NGO Directory
+        </h4>
+        <small class="text-muted" id="count"></small>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm rounded-3 p-3 mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control search-box border-start-0"
+                        id="searchInput" placeholder="Search NGOs..."
+                        oninput="filterNgos()" />
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="btn-group w-100">
+                    <button class="btn btn-primary filter-btn active"
+                        onclick="filterByStatus('all', this)">All</button>
+                    <button class="btn btn-outline-success filter-btn"
+                        onclick="filterByStatus('active', this)">Active</button>
+                    <button class="btn btn-outline-warning filter-btn"
+                        onclick="filterByStatus('pending', this)">Pending</button>
+                    <button class="btn btn-outline-danger filter-btn"
+                        onclick="filterByStatus('rejected', this)">Rejected</button>
+                </div>
+            </div>
+            <div class="col-12 col-md-3">
+                <input type="text" class="form-control search-box"
+                    id="cityFilter" placeholder="Filter by city..."
+                    oninput="filterNgos()" />
+            </div>
+        </div>
+    </div>
+
+    <!-- NGO Cards -->
+    <div id="ngoContainer">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3"></div>
+            <div class="text-muted">Loading NGOs...</div>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="text-center mt-4 mb-3">
+        <a href="/dashboard.html" class="btn btn-outline-primary btn-sm me-2">
+            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+        </a>
+        <a href="/needs.html" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-card-list me-1"></i>Need Cards
+        </a>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let allNgos = [];
+    let statusFilter = 'all';
+
+    const statusColors = {
+        active: 'success', pending: 'warning',
+        rejected: 'danger', under_review: 'info'
+    };
+
+    window.onload = loadNgos;
+
+    async function loadNgos() {
+        try {
+            const res = await fetch('/api/ngos');
+            allNgos = await res.json();
+            renderNgos(allNgos);
+        } catch(e) {
+            document.getElementById('ngoContainer').innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Error loading NGOs!
+                </div>`;
+        }
+    }
+
+    function filterByStatus(status, btn) {
+        statusFilter = status;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active','btn-primary',
+                'btn-success','btn-warning','btn-danger');
+            b.classList.add('btn-outline-' +
+                (b.textContent.trim() === 'All' ? 'primary' :
+                 b.textContent.trim() === 'Active' ? 'success' :
+                 b.textContent.trim() === 'Pending' ? 'warning' : 'danger'));
+        });
+        btn.classList.remove('btn-outline-primary',
+            'btn-outline-success','btn-outline-warning',
+            'btn-outline-danger');
+        btn.classList.add('active', 'btn-' +
+            (status === 'all' ? 'primary' :
+             status === 'active' ? 'success' :
+             status === 'pending' ? 'warning' : 'danger'));
+        filterNgos();
+    }
+
+    function filterNgos() {
+        const q = document.getElementById('searchInput')
+            .value.toLowerCase();
+        const city = document.getElementById('cityFilter')
+            .value.toLowerCase();
+        let filtered = allNgos;
+        if (statusFilter !== 'all')
+            filtered = filtered.filter(n =>
+                n.verificationStatus?.toLowerCase() === statusFilter);
+        if (q)
+            filtered = filtered.filter(n =>
+                Object.values(n).some(v =>
+                    String(v).toLowerCase().includes(q)));
+        if (city)
+            filtered = filtered.filter(n =>
+                n.city?.toLowerCase().includes(city));
+        renderNgos(filtered);
+    }
+
+    function renderNgos(ngos) {
+        document.getElementById('count').textContent =
+            `${ngos.length} NGO(s) found`;
+        if (ngos.length === 0) {
+            document.getElementById('ngoContainer').innerHTML = `
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-building fs-1"></i>
+                    <div class="mt-2">No NGOs found</div>
+                </div>`;
+            return;
+        }
+        let html = '<div class="row g-3">';
+        ngos.forEach(n => {
+            const color = statusColors[
+                n.verificationStatus?.toLowerCase()] || 'secondary';
+            html += `
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="card ngo-card h-100 p-4">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <div class="ngo-avatar flex-shrink-0">
+                            ${(n.name||'N')[0].toUpperCase()}
+                        </div>
+                        <div class="flex-grow-1 min-w-0">
+                            <h6 class="fw-bold mb-1 text-truncate">${n.name||'—'}</h6>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-geo-alt me-1"></i>
+                                ${n.city||'—'}, ${n.state||'—'}
+                            </small>
+                            <small class="text-muted">
+                                <i class="bi bi-flag me-1"></i>${n.country||'India'}
+                            </small>
+                        </div>
+                        <span class="badge bg-${color} flex-shrink-0">
+                            ${n.verificationStatus||'—'}
+                        </span>
+                    </div>
+                    <div class="row g-2 mt-auto">
+                        <div class="col-6">
+                            <div class="stat-pill text-center">
+                                <i class="bi bi-telephone me-1 text-primary"></i>
+                                <small>${n.contactPhone||'—'}</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="stat-pill text-center">
+                                <i class="bi bi-globe me-1 text-success"></i>
+                                <small>${n.website ? 'Website' : 'No website'}</small>
+                            </div>
+                        </div>
+                    </div>
+                    ${n.website ? `
+                    <a href="${n.website}" target="_blank"
+                        class="btn btn-outline-primary btn-sm mt-3 w-100">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Visit Website
+                    </a>` : ''}
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        document.getElementById('ngoContainer').innerHTML = html;
+    }
+</script>
+</body>
+</html>

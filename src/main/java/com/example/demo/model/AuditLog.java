@@ -10,13 +10,29 @@ import java.util.UUID;
 @Table(name = "audit_log")
 public class AuditLog {
 
+    // ✅ Action constants
+    public static final String ACTION_CREATE   = "CREATE";
+    public static final String ACTION_UPDATE   = "UPDATE";
+    public static final String ACTION_DELETE   = "DELETE";
+    public static final String ACTION_APPROVE  = "APPROVE";
+    public static final String ACTION_REJECT   = "REJECT";
+    public static final String ACTION_LOGIN    = "LOGIN";
+    public static final String ACTION_LOGOUT   = "LOGOUT";
+    public static final String ACTION_REGISTER = "REGISTER";
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "log_id")
     private UUID logId;
 
-    @Column(name = "actor_id", nullable = false)
-    private UUID actorId;
+    @Column(name = "actor_id")
+    private String actorId; // String to support both Long and UUID
+
+    @Column(name = "entity_type")
+    private String entityType; // e.g. "Donation", "Ngo", "User"
+
+    @Column(name = "entity_id")
+    private String entityId;
 
     @Column(name = "table_name", nullable = false)
     private String tableName;
@@ -26,17 +42,14 @@ public class AuditLog {
 
     private String action;
 
-    @Column(name = "old_value", columnDefinition = "JSON")
-    private String oldValue;
+    @Column(name = "old_value", columnDefinition = "TEXT")
+    private String oldValue; // JSON snapshot before
 
-    @Column(name = "new_value", columnDefinition = "JSON")
-    private String newValue;
+    @Column(name = "new_value", columnDefinition = "TEXT")
+    private String newValue; // JSON snapshot after
 
     @Column(name = "changed_fields")
     private String changedFields;
-
-    @Column(name = "performed_at")
-    private LocalDateTime performedAt = LocalDateTime.now();
 
     @Column(name = "ip_address")
     private String ipAddress;
@@ -46,4 +59,8 @@ public class AuditLog {
 
     @Column(name = "session_id")
     private String sessionId;
+
+    @Column(name = "performed_at")
+    private LocalDateTime performedAt =
+        LocalDateTime.now();
 }

@@ -10,6 +10,10 @@ import java.util.UUID;
 @Table(name = "ngo_members")
 public class NgoMember {
 
+    // ✅ Role constants
+    public static final String ROLE_NGO_STAFF     = "NGO_STAFF";
+    public static final String ROLE_NGO_VOLUNTEER = "NGO_VOLUNTEER";
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "member_id")
@@ -21,7 +25,7 @@ public class NgoMember {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    private String role;
+    private String role; // NGO_STAFF or NGO_VOLUNTEER
 
     @Column(name = "joined_at")
     private LocalDateTime joinedAt = LocalDateTime.now();

@@ -11,6 +11,11 @@ import java.util.UUID;
 @Table(name = "donations")
 public class Donation {
 
+    public static final String STATUS_PENDING   = "pending";
+    public static final String STATUS_CONFIRMED = "confirmed";
+    public static final String STATUS_DELIVERED = "delivered";
+    public static final String STATUS_CANCELLED = "cancelled";
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "donation_id")
@@ -31,13 +36,32 @@ public class Donation {
     private BigDecimal amountOrQty;
 
     private String currency = "INR";
-    private String status = "pending";
+
+    private String status = STATUS_PENDING;
+
+    @Column(name = "idempotency_key", unique = true)
+    private String idempotencyKey;
+
+    @Column(name = "receipt_id")
+    private String receiptId;
 
     @Column(name = "transaction_ref")
     private String transactionRef;
 
     @Column(name = "cancellation_reason")
     private String cancellationReason;
+
+    // ✅ Anonymous flag — hides donor name in NGO view
+    @Column(name = "is_anonymous")
+    private Boolean isAnonymous = false;
+
+    // ✅ Tax deductible flag — included in receipt PDF
+    @Column(name = "tax_deductible")
+    private Boolean taxDeductible = false;
+
+    // ✅ On behalf of text field
+    @Column(name = "on_behalf_of")
+    private String onBehalfOf;
 
     @Column(name = "is_deleted")
     private Boolean isDeleted = false;

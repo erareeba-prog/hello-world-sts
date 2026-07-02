@@ -62,4 +62,9 @@ public class Need {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // ✅ Optimistic locking — prevents concurrent updates
+    @Version
+    @Column(name = "version")
+    private Long version = 0L;
 }
