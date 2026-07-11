@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f0f2f5; }
+        .navbar { background: linear-gradient(135deg, #1a237e, #1565c0) !important; }
+        .role-chip { border-radius: 20px; font-size: 12px; padding: 4px 12px; font-weight: 600; }
+        .table th { background: #1a237e; color: white; }
+        .table td { vertical-align: middle; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; color: white; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark px-4 py-3 mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/dashboard.html">
+            <i class="bi bi-arrow-left me-2"></i>NGO Platform
+        </a>
+        <span class="text-white-50 small">
+            <i class="bi bi-people me-1"></i>Users Directory
+        </span>
+    </div>
+</nav>
+
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold">
+            <i class="bi bi-people-fill me-2 text-primary"></i>Users Directory
+        </h4>
+        <small class="text-muted" id="count"></small>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card border-0 shadow-sm rounded-3 p-3 mb-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0"
+                        id="searchInput" placeholder="Search users..."
+                        oninput="searchUsers()" />
+                </div>
+            </div>
+            <div class="col-12 col-md-7">
+                <div class="btn-group flex-wrap" role="group">
+                    <button class="btn btn-secondary role-chip active"
+                        onclick="loadUsers('all', this)">
+                        <i class="bi bi-people me-1"></i>All
+                    </button>
+                    <button class="btn btn-outline-success role-chip"
+                        onclick="loadUsers('DONOR', this)">
+                        <i class="bi bi-heart me-1"></i>Donor
+                    </button>
+                    <button class="btn btn-outline-primary role-chip"
+                        onclick="loadUsers('NGO', this)">
+                        <i class="bi bi-building me-1"></i>NGO
+                    </button>
+                    <button class="btn btn-outline-warning role-chip"
+                        onclick="loadUsers('PROVIDER', this)">
+                        <i class="bi bi-truck me-1"></i>Provider
+                    </button>
+                    <button class="btn btn-outline-danger role-chip"
+                        onclick="loadUsers('ADMIN', this)">
+                        <i class="bi bi-shield me-1"></i>Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            Loading users...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <div class="text-center mt-4 mb-3">
+        <a href="/auth.html" class="btn btn-outline-primary btn-sm me-2">
+            <i class="bi bi-shield-lock me-1"></i>Login / Register
+        </a>
+        <a href="/dashboard.html" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+        </a>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let allUsers = [];
+
+    const roleColors = {
+        DONOR: 'success', NGO: 'primary',
+        PROVIDER: 'warning', ADMIN: 'danger'
+    };
+    const roleAvatarColors = {
+        DONOR: '#28a745', NGO: '#007bff',
+        PROVIDER: '#fd7e14', ADMIN: '#dc3545'
+    };
+
+    async function loadUsers(filter, btn) {
+        if (btn) {
+            document.querySelectorAll('.role-chip').forEach(b => {
+                b.classList.remove('active');
+                const role = b.textContent.trim()
+                    .replace(/[^\w]/g,'').toUpperCase();
+                const color = role === 'ALL' ? 'secondary' :
+                    role === 'DONOR' ? 'success' :
+                    role === 'NGO' ? 'primary' :
+                    role === 'PROVIDER' ? 'warning' : 'danger';
+                b.className = `btn btn-outline-${color} role-chip`;
+            });
+            btn.classList.add('active');
+            btn.className = btn.className
+                .replace('btn-outline-','btn-');
+        }
+
+        const url = filter === 'all'
+            ? '/users' : `/users/role/${filter}`;
+        try {
+            const res = await fetch(url);
+            allUsers = await res.json();
+            renderUsers(allUsers);
+        } catch(e) {
+            document.getElementById('tableBody').innerHTML = `
+                <tr><td colspan="6" class="text-center text-danger py-4">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Error loading users!
+                </td></tr>`;
+        }
+    }
+
+    function searchUsers() {
+        const q = document.getElementById('searchInput')
+            .value.toLowerCase();
+        if (!q) { renderUsers(allUsers); return; }
+        const filtered = allUsers.filter(u =>
+            Object.values(u).some(v =>
+                String(v).toLowerCase().includes(q)));
+        renderUsers(filtered);
+    }
+
+    function renderUsers(users) {
+        document.getElementById('count').textContent =
+            `${users.length} user(s)`;
+        const tbody = document.getElementById('tableBody');
+        if (users.length === 0) {
+            tbody.innerHTML = `
+                <tr><td colspan="6" class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No users found
+                </td></tr>`;
+            return;
+        }
+        tbody.innerHTML = users.map((u, i) => {
+            const role = u.role || 'N/A';
+            const color = roleColors[role] || 'secondary';
+            const avatarColor = roleAvatarColors[role] || '#607d8b';
+            const date = u.created_at
+                ? new Date(u.created_at)
+                    .toLocaleDateString('en-IN')
+                : '—';
+            return `
+            <tr>
+                <td><span class="badge bg-secondary">${i+1}</span></td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="user-avatar"
+                            style="background:${avatarColor}">
+                            ${(u.name||'?')[0].toUpperCase()}
+                        </div>
+                        <div>
+                            <div class="fw-semibold">${u.name||'—'}</div>
+                            <small class="text-muted">ID: ${u.id}</small>
+                        </div>
+                    </div>
+                </td>
+                <td><small>${u.email||'—'}</small></td>
+                <td><span class="badge bg-${color}">${role}</span></td>
+                <td>
+                    <span class="badge ${u.isActive ? 'bg-success' : 'bg-secondary'}">
+                        ${u.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                </td>
+                <td><small class="text-muted">${date}</small></td>
+            </tr>`;
+        }).join('');
+    }
+
+    loadUsers('all', null);
+</script>
+</body>
+</html>
