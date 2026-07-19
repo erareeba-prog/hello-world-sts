@@ -17,18 +17,18 @@ public class SwaggerConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
             .info(new Info()
-                .title("NGO Donation Platform API")
+                .title("AidConnect Platform API")
                 .description(
-                    "REST API for NGO Donation Platform — " +
+                    "REST API for AidConnect Platform — " +
                     "manage NGOs, donations, needs, " +
                     "fulfillments and users.")
                 .version("1.0.0")
                 .contact(new Contact()
-                    .name("NGO Platform Team")
-                    .email("support@ngoplatform.com"))
+                    .name("AidConnect")
+                    .email("erareeba@gmail.com"))
                 .license(new License()
-                    .name("MIT License")))
-            // ✅ JWT Bearer auth in Swagger UI
+                    .name("Amity License")))
+            // JWT Bearer auth in Swagger UI
             .addSecurityItem(
                 new SecurityRequirement()
                     .addList("Bearer Authentication"))
